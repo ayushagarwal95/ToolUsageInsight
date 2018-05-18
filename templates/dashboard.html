@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<style>
+* {box-sizing: border-box}
+
+/* Set height of body and the document to 100% */
+body, html {
+    height: 100%;
+    margin: 0;
+    font-family: Arial;
+}
+
+/* Style tab links */
+.tablink {
+    background-color: #555;
+    color: white;
+    float: left;
+    border: none;
+    outline: none;
+    cursor: pointer;
+    padding: 14px 16px;
+    font-size: 17px;
+    width: 25%;
+}
+
+.tablink:hover {
+    background-color: #777;
+}
+
+/* Style the tab content (and add height:100% for full page content) */
+.tabcontent {
+    color: Black;
+    display: none;
+    padding: 100px 20px;
+    height: 100%;
+}
+
+</style>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highcharts/6.0.7/css/highcharts.css" type="text/css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highcharts/6.0.7/highcharts.js"></script>
+</head>
+<body>
+
+<button class="tablink" onclick="openPage('Seller Graph', this, 'red');drawChart1();" id="defaultOpen" >Seller Graph</button>
+<button class="tablink" onclick="openPage('Tool Adoption', this, 'green');drawChart2();" >Tool Adoption</button>
+<button class="tablink" onclick="openPage('Feedback Loop', this, 'blue')">Feedback Loop</button>
+<button class="tablink" onclick="openPage('Model Recommend', this, 'orange')">Model Recommend</button>
+
+<div id="Seller Graph" class="tabcontent">
+  <h3>Seller Graph</h3>
+  <div id="container-1">
+
+  </div>
+</div>
+
+<div id="Tool Adoption" class="tabcontent">
+  <h3>Tool Adoption</h3>
+  <div id="container-2"></div>
+</div>
+
+<!--<div id="Feedback Loop" class="tabcontent">
+  <h3>Feedback Loop</h3>
+  <div id="container-3"></div>
+  <p>Get in touch, or swing by for a cup of coffee.</p>
+</div>
+
+<div id="Model Recommend" class="tabcontent">
+  <h3>About</h3>
+  <p>Who we are and what we do.</p>
+</div>
+-->
+<script>
+function openPage(pageName,elmnt,color) {
+    var i, tabcontent, tablinks;
+    tabcontent = document.getElementsByClassName("tabcontent");
+    for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].style.display = "none";
+    }
+    tablinks = document.getElementsByClassName("tablink");
+    for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].style.backgroundColor = "";
+    }
+    document.getElementById(pageName).style.display = "block";
+    elmnt.style.backgroundColor = color;
+
+}
+// Get the element with id="defaultOpen" and click on it
+document.getElementById("defaultOpen").click();
+function drawChart1() {
+    jQuery.ajax({
+        url: "/dashboard/graphone",
+        type: "GET",
+        success: function (response) {
+            if (response != null) {
+                var data = response;
+                console.log(data);
+                var data = JSON.parse(data);
+                var series = [];
+                var labels = [];
+                Object.keys(data).forEach(function (i, key) {
+                    Object.keys(data[i]).forEach(function (index, key) {
+                        if (i == "toolid") {
+                            labels.push(data[i][index]);
+                        } else {
+                            series.push(data[i][index]);
+                        }
+                    });
+                });
+                var chart = new Highcharts.Chart({
+                    chart: {
+                        renderTo: 'container-1',
+                        type: 'column'
+                    },
+                    plotOptions: {
+                        column: {
+                            style: {
+                                color: (Highcharts.theme && Highcharts.theme.contrastTextColor) || 'black'
+                            }
+                        }
+                    },
+                    xAxis: {
+                        type: 'datetime',
+                        categories: labels
+                    },
+
+                    series: [{
+                        colorByPoint: true,
+                        data: series,
+                    }]
+                });
+            }
+        }
+    });
+}
+function drawChart2() {
+    jQuery.ajax({
+        url: "/dashboard/graphtwo",
+        type: "GET",
+        success: function (response) {
+            if (response != null) {
+                var data = response;
+                console.log(data);
+                var data = JSON.parse(data);
+                var series = [];
+                var l = Object.keys(data.toolid);
+                for (i = 0; i < l.length;i++) {
+                    var n = {};
+                    n.name = data.toolid[i];
+                    n.y = data.numOfUsers[i];
+                    series.push(n);
+                }
+                console.log(series);
+                var chart = new Highcharts.Chart({
+                    chart: {
+                        renderTo: 'container-2',
+                        type: 'pie'
+                    },
+
+                    series: [{
+                        data: series
+                    }]
+                });
+            }
+        }
+    });
+}
+</script>
+     
+</body>
+</html> 

@@ -1,0 +1,168 @@
+<html>
+<head>
+    <title>Home | Sales Insight</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+    <link rel="stylesheet" href="/static/css/bootstrap.min.css" type="text/css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js"></script>
+    <link rel="stylesheet" href="/static/css/bootstrap-grid.min.css" type="text/css">
+  <link rel="stylesheet" href="/static/css/bootstrap-reboot.min.css" type="text/css">
+  <link rel="stylesheet" href="/static/css/style.css" type="text/css">
+  <link rel="stylesheet" href="/static/css/mbr-additional.css" type="text/css">
+  <style>
+        body {
+      padding-top: 90px;
+      padding-bottom: 90px;
+      background-color: #f9f9f9;
+    }
+     .card-box {
+      background-color: #ffffff;
+      padding: 2rem;
+    }
+     h4 {
+      font-weight: 500;
+      margin-bottom: 0;
+      text-align: left;
+    }
+     p {
+      color: #767676;
+      text-align: left;
+    }
+     .card-wrapper {
+      position: relative;
+      box-shadow: 0px 0px 0px 0px rgba(0, 0, 0, 0);
+      transition: box-shadow 0.3s;
+    }
+     .card-wrapper:hover {
+      box-shadow: 0px 0px 30px 0px rgba(0, 0, 0, 0.05);
+      transition: box-shadow 0.3s;
+    }
+     .card-img {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      overflow: hidden;
+    }
+    </style>
+</head>
+<body>
+        <nav class="navbar navbar-expand-md bg-dark navbar-dark">
+            <a class="navbar-brand" href="#">Sales Insight as a Service</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="collapsibleNavbar">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#">Home</a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/logout">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+        <div class="container">
+            {% if js['tools']|length != 0 %} 
+            {% set j = 0 %} 
+            <div class="media-container-row">
+            {% for tool in js['tools'] %} 
+            {% set j = j+1 %}
+                <div class="card p-3 col-12 col-md-6 col-lg-4">
+                    <div class="card-wrapper media-container-row media-container-row">
+                        <div class="card-box">
+                            <h4 class="card-title pb-3 mbr-fonts-style display-7">
+                                Tool {{ loop.index }}
+                            </h4>
+                            <a class="mbr-text mbr-fonts-style display-7" href="{{ tool['url'] }}" onclick="openNew('{{ tool["url"] }}', '{{ tool["id"] }}'); return false;" target="_blank">
+                                {{ tool['name'] }}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% if j == 3 %}
+            </div>
+            <div class="media-container-row">
+            {% set j = 0 %}
+            {% else %} 
+            {% endif %}
+            {% endfor %}
+            {% else %} 
+            {% endif %} 
+            </div>
+            </div>    
+    <script>
+        var session = {{ js|tojson() }};
+        const sessionVar = session.session_id;
+        var num_of_times = [];
+        for (var i = 0;i < session.tools.length;i++) {
+            num_of_times.push(0);
+        }
+        function openNew(href, toolId) {
+            var current = window.open(href, 'MyWindow' + toolId, "height=640,width=960,toolbar=no,menubar=no,scrollbars=no,location=no,status=no");
+            var clickTime = (new Date()).getTime();
+            num_of_times[toolId - 1]++;
+            data = {
+                tool_id: toolId,
+                time: clickTime,
+                flag: true,
+                session_id: sessionVar,
+                inst: num_of_times[toolId - 1]
+            }
+            jQuery.ajax({
+                url: "/home/data",
+                type: "POST",
+                data: JSON.stringify(data),
+                dataType: "json",
+                contentType: "application/json; charset=utf-8",
+                beforeSend: function (x) {
+                    if (x && x.overrideMimeType) {
+                        x.overrideMimeType("application/j-son;charset=UTF-8");
+                    }
+                },
+                success: function (result) {
+                    return;
+                }
+            });
+            (function (win, url, clickTime) {
+                var timer = setInterval(function () { polling(win, timer, url, clickTime, toolId, data.inst) }, 500);
+            })(current, href, clickTime);
+        }
+
+        function polling(win, timer, url, clickTime, toolId, inst) {
+            if (win && win.closed) {
+                var closingTime = (new Date()).getTime();
+                clearInterval(timer);
+                //replace console with div log
+                endData = {
+                    tool_id: toolId,
+                    time: closingTime,
+                    flag: false,
+                    session_id: sessionVar,
+                    inst: inst
+                }
+                jQuery.ajax({
+                    url: "/home/data",
+                    type: "POST",
+                    data: JSON.stringify(endData),
+                    contentType: "application/json; charset=utf-8",
+                    dataType: "json",
+                    beforeSend: function (x) {
+                        if (x && x.overrideMimeType) {
+                            x.overrideMimeType("application/j-son;charset=UTF-8");
+                        }
+                    },
+                    success: function (result) {
+                        return;
+                    }
+                });
+            }
+        }
+    </script>
+    <script type = "text/javascript" 
+         src = "{{ url_for('static', filename = 'js/bootstrap.min.js') }}" ></script>
+</body>
+</html>
